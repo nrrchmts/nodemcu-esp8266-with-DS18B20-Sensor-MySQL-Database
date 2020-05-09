@@ -11,8 +11,7 @@ int nilaiMax = 1023;
 float tinggi_air = 0;
 float panjangSensor = 4.0; //tinggi sensor
 
-void setup()
-{
+void setup(){
   Serial.begin(115200);
   delay(10);
 
@@ -35,8 +34,7 @@ void setup()
   Serial.println(WiFi.localIP());
 }
 
-void loop()
-{
+void loop(){
   sensorValue = analogRead(pinSensor);
   tinggi_air = sensorValue * panjangSensor / nilaiMax;
 
