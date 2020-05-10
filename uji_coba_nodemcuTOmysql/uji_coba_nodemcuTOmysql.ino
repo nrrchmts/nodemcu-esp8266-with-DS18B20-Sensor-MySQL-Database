@@ -1,42 +1,48 @@
-5#include <ESP8266WiFi.h>
+
+#include <ESP8266WiFi.h>
+#include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 const char *ssid = "SWIFT-3-OBOHIB0 8693"; //nama wifi
 const char *password = "rawamas4498";      //password
 const char *host = "10.10.12.152";         //IP PC
 
-#define pinSensor A0
-int sensorValue = 0;
-int nilaiMax = 1023;
+//memasukkan pin
+int sensorPinDS18b20 = 4;
 
-float tinggi_air = 0;
-float panjangSensor = 4.0; //tinggi sensor
+//membuat variabel kosong
+float suhuC;
 
-void setup(){
-  Serial.begin(115200);
-  delay(10);
+OneWire ourWire(sensorPinDS18b20);
+DallasTemperature sensors(&ourWire);
 
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+void setup() {
+   Serial.begin(115200);
+   delay(1000);
 
-  WiFi.begin(ssid, password);
+   Serial.println();
+   Serial.println();
+   Serial.print("Connecting to ");
+   Serial.println(ssid);
 
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
+   WiFi.begin(ssid, password);
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+   while (WiFi.status() != WL_CONNECTED)
+   {
+     delay(500);
+     Serial.print(".");
+   }
+
+   Serial.println("");
+   Serial.println("WiFi connected");
+   Serial.println("IP address: ");
+   Serial.println(WiFi.localIP());
 }
 
-void loop(){
-  sensorValue = analogRead(pinSensor);
-  tinggi_air = sensorValue * panjangSensor / nilaiMax;
+void loop() {
+  sensors.requestTemperatures();
+  suhuC = sensors.getTempCByIndex(0);
 
   Serial.print("connecting to ");
   Serial.println(host);
@@ -50,17 +56,17 @@ void loop(){
   }
 
   // We now create a URI for the request
-  String url = "/node_water/add.php?";
-  url += "tinggi_air=";
-  url += tinggi_air;
+  String url = "/nodemcu-esp8266-with-DS18B20-Sensor-MySQL-Database/add.php?";
+  url += "suhu_air=";
+  url += suhuC;
 
   Serial.print("Requesting URL: ");
   Serial.println(url);
 
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Connection: close\r\n\r\n");
+              "Host: " + host + "\r\n" +
+              "Connection: close\r\n\r\n");
 
   unsigned long timeout = millis();
   while (client.available() == 0)
@@ -94,5 +100,11 @@ void loop(){
 
   Serial.println();
   Serial.println("closing connection");
-  delay(10000);
+
+  //menampilkan hasil pembacaan sensor Suhu DS18b20
+  Serial.print("Suhu = ");
+  Serial.print(suhuC);
+  Serial.print(" ");
+  Serial.println("C");
+  delay(1000);
 }
