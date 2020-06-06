@@ -2,4 +2,4 @@
 im just a try
 
 ## Skematik NodeMCU
-![Skematik NodeMCU Amica](![alt text](http://url/to/img.png))
+![](https://github.com/nrrchmts/nodemcu-esp8266-with-DS18B20-Sensor-MySQL-Database/blob/master/assets/img/skematik-NodeMCU.png)
