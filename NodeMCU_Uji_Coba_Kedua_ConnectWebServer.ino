@@ -1,175 +1,109 @@
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com  
-*********/
-
-// Import required libraries
-#ifdef ESP32
-  #include <WiFi.h>
-  #include <ESPAsyncWebServer.h>
-#else
-  #include <Arduino.h>
-  #include <ESP8266WiFi.h>
-  #include <Hash.h>
-  #include <ESPAsyncTCP.h>
-  #include <ESPAsyncWebServer.h>
-#endif
+#include <ESP8266WiFi.h>
+#include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// Data wire is connected to GPIO 4
-#define ONE_WIRE_BUS 4
+const char *ssid = "xxxxx"; //nama wifi
+const char *password = "xxxxx";      //password wifi
+const char *host = "xxxxx";         //IP PC -> ipconfig
 
-// Setup a oneWire instance to communicate with any OneWire devices
-OneWire oneWire(ONE_WIRE_BUS);
+//memasukkan pin
+int sensorPinDS18b20 = 4;
 
-// Pass our oneWire reference to Dallas Temperature sensor 
-DallasTemperature sensors(&oneWire);
+//membuat variabel kosong
+float suhuC;
 
-// Replace with your network credentials
-const char* ssid = "SWIFT-3-OBOHIB0 8693";
-const char* password = "rawamas4498";
+OneWire ourWire(sensorPinDS18b20);
+DallasTemperature sensors(&ourWire);
 
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
+void setup() {
+   Serial.begin(115200);
+   delay(1000);
 
-String readDSTemperatureC() {
-  // Call sensors.requestTemperatures() to issue a global temperature and Requests to all devices on the bus
-  sensors.requestTemperatures(); 
-  float tempC = sensors.getTempCByIndex(0);
+   Serial.println();
+   Serial.println();
+   Serial.print("Connecting to ");
+   Serial.println(ssid);
 
-  if(tempC == -127.00) {
-    Serial.println("Failed to read from DS18B20 sensor");
-    return "--";
-  } else {
-    Serial.print("Temperature Celsius: ");
-    Serial.println(tempC); 
-  }
-  return String(tempC);
+   WiFi.begin(ssid, password);
+
+   while (WiFi.status() != WL_CONNECTED)
+   {
+     delay(500);
+     Serial.print(".");
+   }
+
+   Serial.println("");
+   Serial.println("WiFi connected");
+   Serial.println("IP address: ");
+   Serial.println(WiFi.localIP());
 }
 
-String readDSTemperatureF() {
-  // Call sensors.requestTemperatures() to issue a global temperature and Requests to all devices on the bus
-  sensors.requestTemperatures(); 
-  float tempF = sensors.getTempFByIndex(0);
+void loop() {
+  sensors.requestTemperatures();
+  suhuC = sensors.getTempCByIndex(0);
 
-  if(int(tempF) == -196){
-    Serial.println("Failed to read from DS18B20 sensor");
-    return "--";
-  } else {
-    Serial.print("Temperature Fahrenheit: ");
-    Serial.println(tempF);
+  Serial.print("connecting to ");
+  Serial.println(host);
+
+  WiFiClient client;
+  const int httpPort = 80;
+  if (!client.connect(host, httpPort))
+  {
+    Serial.println("connection failed");
+    return;
   }
-  return String(tempF);
-}
 
-const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-  <style>
-    html {
-     font-family: Arial;
-     display: inline-block;
-     margin: 0px auto;
-     text-align: center;
-    }
-    h2 { font-size: 3.0rem; }
-    p { font-size: 3.0rem; }
-    .units { font-size: 1.2rem; }
-    .ds-labels{
-      font-size: 1.5rem;
-      vertical-align:middle;
-      padding-bottom: 15px;
-    }
-  </style>
-</head>
-<body>
-  <h2>ESP DS18B20 Server</h2>
-  <p>
-    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
-    <span class="ds-labels">Temperature Celsius</span> 
-    <span id="temperaturec">%TEMPERATUREC%</span>
-    <sup class="units">&deg;C</sup>
-  </p>
-  <p>
-    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
-    <span class="ds-labels">Temperature Fahrenheit</span>
-    <span id="temperaturef">%TEMPERATUREF%</span>
-    <sup class="units">&deg;F</sup>
-  </p>
-</body>
-<script>
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("temperaturec").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/temperaturec", true);
-  xhttp.send();
-}, 10000) ;
-setInterval(function ( ) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("temperaturef").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "/temperaturef", true);
-  xhttp.send();
-}, 10000) ;
-</script>
-</html>)rawliteral";
+  // We now create a URI for the request
+  String url = "/nodemcu-esp8266-with-DS18B20-Sensor-MySQL-Database/add.php?";
+  url += "suhu_air=";
+  url += suhuC;
 
-// Replaces placeholder with DHT values
-String processor(const String& var){
-  //Serial.println(var);
-  if(var == "TEMPERATUREC"){
-    return readDSTemperatureC();
+  Serial.print("Requesting URL: ");
+  Serial.println(url);
+
+  // This will send the request to the server
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+              "Host: " + host + "\r\n" +
+              "Connection: close\r\n\r\n");
+
+  unsigned long timeout = millis();
+  while (client.available() == 0)
+  {
+    if (millis() - timeout > 5000)
+    {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      return;
+    }
   }
-  else if(var == "TEMPERATUREF"){
-    return readDSTemperatureF();
-  }
-  return String();
-}
 
-void setup(){
-  // Serial port for debugging purposes
-  Serial.begin(115200);
+  // Read all the lines of the reply from server and print them to Serial
+  while (client.available())
+  {
+    String line = client.readStringUntil('\r');
+    //Serial.print(line);
+
+    if (line.indexOf("sukses gaes") != -1)
+    {
+      Serial.println();
+      Serial.println("Yes, data masuk");
+    }
+    else if (line.indexOf("gagal gaes") != -1)
+    {
+      Serial.println();
+      Serial.println("Maaf, data gagal masuk");
+      //digitalWrite(alarmPin, HIGH);
+    }
+  }
+
   Serial.println();
-  
-  // Start up the DS18B20 library
-  sensors.begin();
-  
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-  
-  // Print ESP Local IP Address
-  Serial.println(WiFi.localIP());
+  Serial.println("closing connection");
 
-  // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", index_html, processor);
-  });
-  server.on("/temperaturec", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", readDSTemperatureC().c_str());
-  });
-  server.on("/temperaturef", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", readDSTemperatureF().c_str());
-  });
-  // Start server
-  server.begin();
-}
- 
-void loop(){
-  
+  //menampilkan hasil pembacaan sensor Suhu DS18b20
+  Serial.print("Suhu = ");
+  Serial.print(suhuC);
+  Serial.print(" ");
+  Serial.println("C");
+  delay(1000);
 }
