@@ -16,7 +16,6 @@ Trig to Arduino pin 8
 
 #define echoPin 12 //Echo Pin
 #define trigPin 14 //Trigger Pin
-#define LEDPin 13 //Led default dari Arduino uno
 
 int maximumRange = 200; //kebutuhan akan maksimal range
 int minimumRange = 00; //kebutuhan akan minimal range
@@ -27,7 +26,6 @@ Serial.begin (115200); //inisialiasasi komunikasi serial
 //deklarasi pin
 pinMode(trigPin, OUTPUT);
 pinMode(echoPin, INPUT);
-pinMode(LEDPin, OUTPUT);
 }
 
 void loop() {
@@ -47,14 +45,27 @@ untuk menunjukkan "di luar jangkauan" */
 
 if (distance >= maximumRange || distance <= minimumRange)
 {
-Serial.println("-1");digitalWrite(LEDPin, HIGH);
+Serial.println("-1");
 }
 else {
 
-/*Kirim jarak ke komputer menggunakan Serial protokol, dan
-menghidupkan LED OFF untuk menunjukkan membaca sukses. */
-Serial.println(distance);
-digitalWrite(LEDPin, LOW);
+
+/*
+ * dik: p(kolam)=; l(kolam)=; t(kolam)=;
+ * 
+ * Rumus 
+ * t(air) = t(kolam) - distance
+ * volume(air) = p(kolam) * l(kolam) * t(air) 
+ */
+int pKolam = 15;
+int lKolam = 14;
+int tKolam = 11;
+int tAir;
+int volumeAir;
+
+tAir = tKolam - distance;
+volumeAir = pKolam * lKolam * tAir;
+Serial.println(volumeAir); //p kolam dikurangi
 
 //waktu tunda 50mS
 delay(1000);

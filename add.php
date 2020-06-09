@@ -9,9 +9,8 @@
 
   $stmt->bindParam(':suhu_air', $sensor);
 
-  if (stmt->execute()) {
+  if ($stmt->execute()) {
     echo "sukses gaees!";
   } else {
     echo "gagal kirim nih";
   }
-?>

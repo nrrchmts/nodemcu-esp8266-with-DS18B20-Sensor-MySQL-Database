@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 
-const char *ssid = "SWIFT-3-OBOHIB0 8693"; //nama wifi
-const char *password = "rawamas4498";      //password
-const char *host = "10.10.12.152";         //IP PC
+const char *ssid = "xxxxx"; //nama wifi
+const char *password = "xxxxx";      //password
+const char *host = "xxxxx";         //IP PC
 
 #define pinSensor A0
 int sensorValue = 0;

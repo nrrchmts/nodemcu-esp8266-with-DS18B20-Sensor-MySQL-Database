@@ -1,11 +1,12 @@
+
 #include <ESP8266WiFi.h>
 #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
 const char *ssid = "xxxxx"; //nama wifi
-const char *password = "xxxxx";      //password wifi
-const char *host = "xxxxx";         //IP PC -> ipconfig
+const char *password = "xxxxx";      //password
+const char *host = "xxxxx";         //IP PC
 
 //memasukkan pin
 int sensorPinDS18b20 = 4;
@@ -55,7 +56,7 @@ void loop() {
   }
 
   // We now create a URI for the request
-  String url = "/nodemcu-esp8266-with-DS18B20-Sensor-MySQL-Database/add.php?";
+  String url = "/nodemcu-esp8266-with-DS18B20-Sensor-MySQL-Database/ujiCoba2DS18B20toMySQL/add.php?";
   url += "suhu_air=";
   url += suhuC;
 
